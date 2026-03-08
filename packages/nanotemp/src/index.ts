@@ -248,6 +248,7 @@ function cleanupSync(): false | Stats {
   return { files: fileCount, dirs: dirCount };
 }
 
+// oxlint-disable-next-line typescript/no-explicit-any
 function cleanup(callback: (err: any, result?: Stats) => void): void;
 function cleanup(): Promise<Stats>;
 
@@ -273,6 +274,7 @@ function cleanup(callback?) {
 
 function mkdir(
   affixes: string | AffixOptions | undefined,
+  // oxlint-disable-next-line typescript/no-explicit-any
   callback: (err: any, dirPath: string) => void,
 ): void;
 function mkdir(affixes?: string | AffixOptions): Promise<string>;
@@ -300,6 +302,7 @@ function mkdirSync(affixes?: string | AffixOptions): string {
 
 function open(
   affixes: string | AffixOptions | undefined,
+  // oxlint-disable-next-line typescript/no-explicit-any
   callback: (err: any, result: OpenFile) => void,
 ): void;
 function open(affixes?: string | AffixOptions): Promise<OpenFile>;

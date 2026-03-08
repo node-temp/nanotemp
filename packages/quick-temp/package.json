@@ -1,0 +1,21 @@
+{
+  "name": "@nanotemp/quick-temp",
+  "version": "0.0.0",
+  "license": "MIT",
+  "files": [
+    "dist/**/*",
+    "README.md"
+  ],
+  "scripts": {
+    "lint": "oxlint",
+    "format": "oxfmt",
+    "build": "tsdown",
+    "prepublishOnly": "bun run build"
+  },
+  "devDependencies": {
+    "tsdown": "catalog:"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
