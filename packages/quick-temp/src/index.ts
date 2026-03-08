@@ -1,8 +1,8 @@
-var fs = require("fs");
-var path = require("path");
-var mktemp = require("./mktemp");
-var rimraf = require("rimraf");
-var underscoreString = require("underscore.string");
+const fs = require("node:fs");
+const path = require("node:path");
+const mktemp = require("./mktemp");
+const rimraf = require("rimraf");
+const underscoreString = require("underscore.string");
 
 exports.makeOrRemake = makeOrRemake;
 function makeOrRemake(obj, prop, className) {
@@ -23,7 +23,7 @@ function makeOrReuse(obj, prop, className) {
 
 exports.remake = remake;
 function remake(obj, prop) {
-  var fullpath = obj[prop];
+  const fullpath = obj[prop];
   if (fullpath != null) {
     rimraf.sync(fullpath);
     fs.mkdirSync(fullpath);
@@ -40,7 +40,7 @@ function remove(obj, prop) {
 
 function makeTmpDir(obj, prop, className) {
   if (className == null) className = obj.constructor && obj.constructor.name;
-  var tmpDirName = prettyTmpDirName(className, prop);
+  const tmpDirName = prettyTmpDirName(className, prop);
   return mktemp.createDirSync(path.join(findBaseDir(), tmpDirName));
 }
 
@@ -49,7 +49,7 @@ function currentTmp() {
 }
 
 function findBaseDir() {
-  var tmp = currentTmp();
+  const tmp = currentTmp();
   try {
     if (fs.statSync(tmp).isDirectory()) {
       return tmp;
@@ -71,9 +71,9 @@ function cleanString(s) {
 }
 
 function prettyTmpDirName(className, prop) {
-  var cleanClassName = cleanString(className);
+  let cleanClassName = cleanString(className);
   if (cleanClassName === "object") cleanClassName = "";
   if (cleanClassName) cleanClassName += "-";
-  var cleanPropertyName = cleanString(prop);
+  const cleanPropertyName = cleanString(prop);
   return cleanClassName + cleanPropertyName + "-XXXXXXXX.tmp";
 }
