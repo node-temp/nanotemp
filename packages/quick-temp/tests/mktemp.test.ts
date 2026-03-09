@@ -1,0 +1,378 @@
+import {
+  it,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  vi,
+  type Mock as MockInstance,
+} from "bun:test";
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
+
+import * as mktemp from "@nanotemp/quick-temp/mktemp";
+
+const win32 = process.platform === "win32";
+const WIN_MODE = 0o666;
+
+describe("exports", () => {
+  it.each([
+    "createDir",
+    "createDirSync",
+    "createFile",
+    "createFileSync",
+    "generateUniqueName",
+  ] as const)("should export %s", (functionName: keyof typeof mktemp) => {
+    expect(mktemp[functionName]).toBeFunction();
+  });
+});
+
+describe("createXxx & createXxxSync", () => {
+  describe("success cases", () => {
+    let tempDir: string;
+
+    beforeEach(async () => {
+      tempDir = await fs.promises.mkdtemp(
+        path.join(os.tmpdir(), "mktemp-test-success-cases-"),
+      );
+    });
+
+    afterEach(async () => {
+      await fs.promises.rm(tempDir, { force: true, recursive: true });
+    });
+
+    it.each([
+      { defaultMode: 0o700, message: "dir", method: "createDir" },
+      { defaultMode: 0o600, message: "file", method: "createFile" },
+    ] as const)(
+      "should create unique name $message",
+      ({ defaultMode, method }) =>
+        new Promise<void>((resolve, reject) => {
+          const template = path.join(tempDir, "XXXXX.tmp");
+          mktemp[method](template, (err, resultPath): void => {
+            if (err || resultPath === null) {
+              return reject(err);
+            }
+
+            const fileName = path.basename(resultPath);
+
+            expect(/^[\da-zA-Z]{5}\.tmp$/.test(fileName)).toBeTrue();
+
+            // In Linux, the actual file mode contains the system default values,
+            // so check that the specified permission bits are applied
+            fs.stat(resultPath, (err, stat) => {
+              if (err) {
+                return reject(err);
+              }
+
+              const actualMode = stat.mode & 0o777;
+              expect(actualMode).toStrictEqual(win32 ? WIN_MODE : defaultMode);
+              resolve();
+            });
+          });
+        }),
+    );
+
+    it.each([
+      { message: "dir", method: "createDir", mode: 0o755 },
+      { message: "file", method: "createFile", mode: 0o644 },
+    ] as const)(
+      "should create unique name $message with mode",
+      ({ mode, method }) =>
+        new Promise<void>((resolve, reject) => {
+          const template = path.join(tempDir, "XXXXX.tmp");
+          mktemp[method](template, mode, (err, resultPath): void => {
+            if (err || resultPath === null) {
+              return reject(err);
+            }
+
+            const fileName = path.basename(resultPath);
+
+            expect(/^[\da-zA-Z]{5}\.tmp$/.test(fileName)).toBeTrue();
+
+            // In Linux, the actual file mode contains the system default values,
+            // so check that the specified permission bits are applied
+            fs.stat(resultPath, (err, stat) => {
+              if (err) {
+                return reject(err);
+              }
+
+              const actualMode = stat.mode & 0o777;
+              expect(actualMode).toStrictEqual(win32 ? WIN_MODE : mode);
+              resolve();
+            });
+          });
+        }),
+    );
+
+    it.each([
+      { defaultMode: 0o700, message: "dir", method: "createDir" },
+      { defaultMode: 0o600, message: "file", method: "createFile" },
+    ] as const)(
+      "should create unique name $message, Promise version",
+      async ({ defaultMode, method }) => {
+        const template = path.join(tempDir, "XXXXX.tmp");
+        const resultPath = await mktemp[method](template);
+
+        expect(resultPath).not.toBeNull();
+
+        const fileName = path.basename(resultPath);
+
+        expect(/^[\da-zA-Z]{5}\.tmp$/.test(fileName)).toBeTrue();
+
+        // In Linux, the actual file mode contains the system default values,
+        // so check that the specified permission bits are applied
+        const stat = await fs.promises.stat(resultPath);
+        const actualMode = stat.mode & 0o777;
+        expect(actualMode).toStrictEqual(win32 ? WIN_MODE : defaultMode);
+      },
+    );
+    it.each([
+      { message: "dir", method: "createDir", mode: 0o755 },
+      { message: "file", method: "createFile", mode: 0o644 },
+    ] as const)(
+      "should create unique name $message with mode, Promise version",
+      async ({ mode, method }) => {
+        const template = path.join(tempDir, "XXXXX.tmp");
+        const resultPath = await mktemp[method](template, mode);
+
+        expect(resultPath).not.toBeNull();
+
+        const fileName = path.basename(resultPath);
+
+        expect(/^[\da-zA-Z]{5}\.tmp$/.test(fileName)).toBeTrue();
+
+        // In Linux, the actual file mode contains the system default values,
+        // so check that the specified permission bits are applied
+        const stat = await fs.promises.stat(resultPath);
+        const actualMode = stat.mode & 0o777;
+        expect(actualMode).toStrictEqual(win32 ? WIN_MODE : mode);
+      },
+    );
+    it.each([
+      { defaultMode: 0o700, message: "dir", method: "createDirSync" },
+      { defaultMode: 0o600, message: "file", method: "createFileSync" },
+    ] as const)(
+      "should create unique name $message with, sync version",
+      ({ defaultMode, method }) => {
+        const template = path.join(tempDir, "XXXXX.tmp");
+        const resultPath = mktemp[method](template);
+
+        expect(resultPath).not.toBeNull();
+
+        const fileName = path.basename(resultPath);
+
+        expect(/^[\da-zA-Z]{5}\.tmp$/.test(fileName)).toBeTrue();
+        // In Linux, the actual file mode contains the system default values,
+        // so check that the specified permission bits are applied
+        const stat = fs.statSync(resultPath);
+        const actualMode = stat.mode & 0o777;
+        expect(actualMode).toStrictEqual(win32 ? WIN_MODE : defaultMode);
+      },
+    );
+
+    it.each([
+      { message: "dir", method: "createDirSync", mode: 0o755 },
+      { message: "file", method: "createFileSync", mode: 0o644 },
+    ] as const)(
+      "should create unique name $message with mode, sync version",
+      ({ mode, method }) => {
+        const template = path.join(tempDir, "XXXXX.tmp");
+        const resultPath = mktemp[method](template, mode);
+
+        expect(resultPath).not.toBeNull();
+
+        const fileName = path.basename(resultPath);
+
+        expect(/^[\da-zA-Z]{5}\.tmp$/.test(fileName)).toBeTrue();
+        // In Linux, the actual file mode contains the system default values,
+        // so check that the specified permission bits are applied
+        const stat = fs.statSync(resultPath);
+        const actualMode = stat.mode & 0o777;
+        expect(actualMode).toStrictEqual(win32 ? WIN_MODE : mode);
+      },
+    );
+
+    describe("need mocks", () => {
+      let mockFsClose: MockInstance<typeof fs.close>;
+      let mockFsOpen: MockInstance<typeof fs.open>;
+
+      beforeEach(() => {
+        mockFsClose = vi.spyOn(fs, "close");
+        mockFsOpen = vi.spyOn(fs, "open");
+      });
+
+      afterEach(() => {
+        vi.restoreAllMocks();
+      });
+
+      it("should create file", async () => {
+        mockFsOpen.mockImplementationOnce(
+          (...args: Parameters<typeof fs.open>) => {
+            const callback = args.find((arg) => typeof arg === "function");
+            callback?.(null, 100);
+          },
+        );
+        mockFsClose.mockImplementationOnce((_fd, callback) => {
+          callback?.(null);
+        });
+
+        /* TODO: sometimes createFile throws an ENOENT error. how to fix? */
+        const template = path.join(tempDir, "file.tmp");
+        const resultPath = await mktemp.createFile(template);
+
+        expect(resultPath).not.toBeNull();
+      });
+    });
+  });
+
+  describe("error cases", () => {
+    let tempDir: string;
+
+    beforeEach(async () => {
+      tempDir = await fs.promises.mkdtemp(
+        path.join(os.tmpdir(), "mktemp-test-error-cases-"),
+      );
+    });
+
+    afterEach(async () => {
+      await fs.promises.rm(tempDir, { recursive: true });
+    });
+
+    it("should throw error if over retry count", async () => {
+      // NOTE: case-insensitive file systems reduce the number of characters that can be used
+      const baseTable =
+        "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      const table = baseTable.split("");
+      const tableLength = table.length;
+      const template = path.join(tempDir, `repeat-X.tmp`);
+
+      for (let i = 0, len = tableLength * 5; i < len; i += 1) {
+        try {
+          await mktemp.createFile(template);
+        } catch (err: unknown) {
+          expect(err).toBeInstanceOf(RangeError);
+          return;
+        }
+      }
+
+      throw new Error("Expected RangeError but got none");
+    });
+
+    it.each([
+      { method: "createDirSync" },
+      { method: "createFileSync" },
+    ] as const)(
+      "should throw error if over retry count, $method",
+      async ({ method }) => {
+        // NOTE: case-insensitive file systems reduce the number of characters that can be used
+        const baseTable =
+          "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const table = baseTable.split("");
+        const tableLength = table.length;
+        const template = path.join(tempDir, `repeat-X.tmp`);
+
+        for (let i = 0, len = tableLength * 5; i < len; i += 1) {
+          try {
+            mktemp[method](template);
+          } catch (err: unknown) {
+            expect(err).toBeInstanceOf(RangeError);
+            return;
+          }
+        }
+
+        throw new Error("Expected RangeError but got none");
+      },
+    );
+
+    it("should throw error if parameter is not a string", async () => {
+      try {
+        await mktemp.createFile(123 as unknown as string);
+      } catch (err: unknown) {
+        expect(err).toBeInstanceOf(TypeError);
+        return;
+      }
+
+      throw new Error("Expected TypeError but got none");
+    });
+
+    describe("need mocks", () => {
+      let mockFsClose: MockInstance<typeof fs.close>;
+      let mockFsMkdirSync: MockInstance<typeof fs.mkdirSync>;
+      let mockFsOpen: MockInstance<typeof fs.open>;
+      let mockFsOpenSync: MockInstance<typeof fs.openSync>;
+
+      beforeEach(() => {
+        mockFsClose = vi.spyOn(fs, "close");
+        mockFsMkdirSync = vi.spyOn(fs, "mkdirSync");
+        mockFsOpen = vi.spyOn(fs, "open");
+        mockFsOpenSync = vi.spyOn(fs, "openSync");
+      });
+
+      afterEach(() => {
+        vi.restoreAllMocks();
+      });
+
+      it("should throw error if error is not an EEXIST", async () => {
+        mockFsOpen.mockImplementationOnce(
+          (...args: Parameters<typeof fs.open>) => {
+            const callback = args.find((arg) => typeof arg === "function");
+            callback?.({ code: "EACCES" } as NodeJS.ErrnoException, 0);
+          },
+        );
+        mockFsClose.mockImplementationOnce((_fd, callback) => {
+          callback?.(null);
+        });
+
+        try {
+          await mktemp.createFile("XXXXX.tmp");
+          throw new Error("Expected error but got none");
+        } catch (err) {
+          expect((err as NodeJS.ErrnoException).code).toBe("EACCES");
+        }
+      });
+
+      it.each([
+        { method: "createDirSync" },
+        { method: "createFileSync" },
+      ] as const)(
+        "should throw error if error is not an EEXIST, $method",
+        ({ method }) => {
+          switch (method) {
+            case "createDirSync":
+              mockFsMkdirSync.mockImplementationOnce(() => {
+                throw { code: "EACCES" } as NodeJS.ErrnoException;
+              });
+              break;
+            case "createFileSync":
+              mockFsOpenSync.mockImplementationOnce(() => {
+                throw { code: "EACCES" } as NodeJS.ErrnoException;
+              });
+              break;
+          }
+
+          try {
+            mktemp[method]("XXXXX.tmp");
+            throw new Error("Expected error but got none");
+          } catch (err) {
+            expect((err as NodeJS.ErrnoException).code).toBe("EACCES");
+          }
+        },
+      );
+    });
+  });
+});
+
+describe("generateUniqueName", () => {
+  it("should throw error if parameter is not a string", () => {
+    try {
+      mktemp.generateUniqueName(123 as unknown as string);
+    } catch (err: unknown) {
+      expect(err).toBeInstanceOf(TypeError);
+      return;
+    }
+
+    throw new Error("Expected TypeError but got none");
+  });
+});
