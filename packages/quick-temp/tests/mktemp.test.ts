@@ -1,17 +1,17 @@
+import {
+  it,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  vi,
+  type Mock as MockInstance,
+} from "bun:test";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 
 import * as mktemp from "@nanotemp/quick-temp/mktemp";
-import {
-  afterEach,
-  assert,
-  beforeEach,
-  describe,
-  it,
-  type MockInstance,
-  vi,
-} from "vitest";
 
 describe("exports", () => {
   it.each([
@@ -21,7 +21,7 @@ describe("exports", () => {
     "createFileSync",
     "generateUniqueName",
   ] as const)("should export %s", (functionName: keyof typeof mktemp) => {
-    assert.strictEqual(typeof mktemp[functionName], "function");
+    expect(mktemp[functionName]).toBeFunction();
   });
 });
 
@@ -54,7 +54,7 @@ describe("createXxx & createXxxSync", () => {
 
             const fileName = path.basename(resultPath);
 
-            assert.ok(/^[\da-zA-Z]{5}\.tmp$/.test(fileName));
+            expect(/^[\da-zA-Z]{5}\.tmp$/.test(fileName)).toBeTrue();
 
             // In Linux, the actual file mode contains the system default values,
             // so check that the specified permission bits are applied
@@ -64,7 +64,7 @@ describe("createXxx & createXxxSync", () => {
               }
 
               const actualMode = stat.mode & 0o777;
-              assert.strictEqual(actualMode, defaultMode);
+              expect(actualMode).toStrictEqual(defaultMode);
               resolve();
             });
           });
@@ -86,7 +86,7 @@ describe("createXxx & createXxxSync", () => {
 
             const fileName = path.basename(resultPath);
 
-            assert.ok(/^[\da-zA-Z]{5}\.tmp$/.test(fileName));
+            expect(/^[\da-zA-Z]{5}\.tmp$/.test(fileName)).toBeTrue();
 
             // In Linux, the actual file mode contains the system default values,
             // so check that the specified permission bits are applied
@@ -96,7 +96,7 @@ describe("createXxx & createXxxSync", () => {
               }
 
               const actualMode = stat.mode & 0o777;
-              assert.strictEqual(actualMode, mode);
+              expect(actualMode).toStrictEqual(mode);
               resolve();
             });
           });
@@ -112,17 +112,17 @@ describe("createXxx & createXxxSync", () => {
         const template = path.join(tempDir, "XXXXX.tmp");
         const resultPath = await mktemp[method](template);
 
-        assert.ok(resultPath !== null);
+        expect(resultPath).not.toBeNull();
 
         const fileName = path.basename(resultPath);
 
-        assert.ok(/^[\da-zA-Z]{5}\.tmp$/.test(fileName));
+        expect(/^[\da-zA-Z]{5}\.tmp$/.test(fileName)).toBeTrue();
 
         // In Linux, the actual file mode contains the system default values,
         // so check that the specified permission bits are applied
         const stat = await fs.promises.stat(resultPath);
         const actualMode = stat.mode & 0o777;
-        assert.strictEqual(actualMode, defaultMode);
+        expect(actualMode).toStrictEqual(defaultMode);
       },
     );
     it.each([
@@ -134,17 +134,17 @@ describe("createXxx & createXxxSync", () => {
         const template = path.join(tempDir, "XXXXX.tmp");
         const resultPath = await mktemp[method](template, mode);
 
-        assert.ok(resultPath !== null);
+        expect(resultPath).not.toBeNull();
 
         const fileName = path.basename(resultPath);
 
-        assert.ok(/^[\da-zA-Z]{5}\.tmp$/.test(fileName));
+        expect(/^[\da-zA-Z]{5}\.tmp$/.test(fileName)).toBeTrue();
 
         // In Linux, the actual file mode contains the system default values,
         // so check that the specified permission bits are applied
         const stat = await fs.promises.stat(resultPath);
         const actualMode = stat.mode & 0o777;
-        assert.strictEqual(actualMode, mode);
+        expect(actualMode).toStrictEqual(mode);
       },
     );
     it.each([
@@ -156,16 +156,16 @@ describe("createXxx & createXxxSync", () => {
         const template = path.join(tempDir, "XXXXX.tmp");
         const resultPath = mktemp[method](template);
 
-        assert.ok(resultPath !== null);
+        expect(resultPath).not.toBeNull();
 
         const fileName = path.basename(resultPath);
 
-        assert.ok(/^[\da-zA-Z]{5}\.tmp$/.test(fileName));
+        expect(/^[\da-zA-Z]{5}\.tmp$/.test(fileName)).toBeTrue();
         // In Linux, the actual file mode contains the system default values,
         // so check that the specified permission bits are applied
         const stat = fs.statSync(resultPath);
         const actualMode = stat.mode & 0o777;
-        assert.strictEqual(actualMode, defaultMode);
+        expect(actualMode).toStrictEqual(defaultMode);
       },
     );
 
@@ -178,16 +178,16 @@ describe("createXxx & createXxxSync", () => {
         const template = path.join(tempDir, "XXXXX.tmp");
         const resultPath = mktemp[method](template, mode);
 
-        assert.ok(resultPath !== null);
+        expect(resultPath).not.toBeNull();
 
         const fileName = path.basename(resultPath);
 
-        assert.ok(/^[\da-zA-Z]{5}\.tmp$/.test(fileName));
+        expect(/^[\da-zA-Z]{5}\.tmp$/.test(fileName)).toBeTrue();
         // In Linux, the actual file mode contains the system default values,
         // so check that the specified permission bits are applied
         const stat = fs.statSync(resultPath);
         const actualMode = stat.mode & 0o777;
-        assert.strictEqual(actualMode, mode);
+        expect(actualMode).toStrictEqual(mode);
       },
     );
 
@@ -219,7 +219,7 @@ describe("createXxx & createXxxSync", () => {
         const template = path.join(tempDir, "file.tmp");
         const resultPath = await mktemp.createFile(template);
 
-        assert.ok(resultPath !== null);
+        expect(resultPath).not.toBeNull();
       });
     });
   });
@@ -249,7 +249,7 @@ describe("createXxx & createXxxSync", () => {
         try {
           await mktemp.createFile(template);
         } catch (err: unknown) {
-          assert.ok(err instanceof RangeError);
+          expect(err).toBeInstanceOf(RangeError);
           return;
         }
       }
@@ -274,7 +274,7 @@ describe("createXxx & createXxxSync", () => {
           try {
             mktemp[method](template);
           } catch (err: unknown) {
-            assert.ok(err instanceof RangeError);
+            expect(err).toBeInstanceOf(RangeError);
             return;
           }
         }
@@ -287,7 +287,7 @@ describe("createXxx & createXxxSync", () => {
       try {
         await mktemp.createFile(123 as unknown as string);
       } catch (err: unknown) {
-        assert.ok(err instanceof TypeError);
+        expect(err).toBeInstanceOf(TypeError);
         return;
       }
 
@@ -326,7 +326,7 @@ describe("createXxx & createXxxSync", () => {
           await mktemp.createFile("XXXXX.tmp");
           throw new Error("Expected error but got none");
         } catch (err) {
-          assert.ok((err as NodeJS.ErrnoException).code === "EACCES");
+          expect((err as NodeJS.ErrnoException).code).toBe("EACCES");
         }
       });
 
@@ -353,7 +353,7 @@ describe("createXxx & createXxxSync", () => {
             mktemp[method]("XXXXX.tmp");
             throw new Error("Expected error but got none");
           } catch (err) {
-            assert.ok((err as NodeJS.ErrnoException).code === "EACCES");
+            expect((err as NodeJS.ErrnoException).code).toBe("EACCES");
           }
         },
       );
@@ -366,7 +366,7 @@ describe("generateUniqueName", () => {
     try {
       mktemp.generateUniqueName(123 as unknown as string);
     } catch (err: unknown) {
-      assert.ok(err instanceof TypeError);
+      expect(err).toBeInstanceOf(TypeError);
       return;
     }
 
