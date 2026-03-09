@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     name: Build and Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -21,18 +21,18 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@3d267786b128fe76c2f16a390aa2448b815359f3 # v2.1.2
+        uses: oven-sh/setup-bun@ecf28ddc73e819eb6fa29df6b34ef8921c743461 # v2.1.3
         with:
           bun-version: latest
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Run tests
+      - name: Lint code
         run: bun run lint
 
-      - name: Build
+      - name: Build (${{ matrix.os }})
         run: bun run build
 
-      - name: Run tests
+      - name: Run tests (${{ matrix.os }})
         run: bun run test
