@@ -3,7 +3,9 @@ import * as path from "node:path";
 
 import { createDirSync } from "./mktemp";
 
-function makeOrRemake(obj, prop: string, className?: string) {
+type Obj = Record<string, string | null>;
+
+function makeOrRemake(obj: Obj, prop: string, className?: string): string {
   if (obj[prop] != null) {
     remake(obj, prop);
     return obj[prop];
@@ -11,14 +13,14 @@ function makeOrRemake(obj, prop: string, className?: string) {
   return (obj[prop] = makeTmpDir(obj, prop, className));
 }
 
-function makeOrReuse(obj, prop: string, className?: string) {
+function makeOrReuse(obj: Obj, prop: string, className?: string): string {
   if (obj[prop] != null) {
     return obj[prop];
   }
   return (obj[prop] = makeTmpDir(obj, prop, className));
 }
 
-function remake(obj, prop: string): void {
+function remake(obj: Obj, prop: string): void {
   const fullpath = obj[prop];
   if (fullpath != null) {
     fs.rmSync(fullpath);
@@ -26,14 +28,14 @@ function remake(obj, prop: string): void {
   }
 }
 
-function remove(obj, prop: string): void {
+function remove(obj: Obj, prop: string): void {
   if (obj[prop] != null) {
     fs.rmSync(obj[prop]);
   }
   obj[prop] = null;
 }
 
-function makeTmpDir(obj, prop: string, className?: string): string {
+function makeTmpDir(obj: Obj, prop: string, className?: string): string {
   if (className == null) className = obj.constructor && obj.constructor.name;
   const tmpDirName = prettyTmpDirName(className, prop);
   return createDirSync(path.join(findBaseDir(), tmpDirName));
