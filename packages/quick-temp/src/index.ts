@@ -23,14 +23,14 @@ function makeOrReuse(obj: Obj, prop: string, className?: string): string {
 function remake(obj: Obj, prop: string): void {
   const fullpath = obj[prop];
   if (fullpath != null) {
-    fs.rmSync(fullpath);
+    fs.rmSync(fullpath, { recursive: true, force: true });
     fs.mkdirSync(fullpath);
   }
 }
 
 function remove(obj: Obj, prop: string): void {
   if (obj[prop] != null) {
-    fs.rmSync(obj[prop]);
+    fs.rmSync(obj[prop], { recursive: true, force: true });
   }
   obj[prop] = null;
 }
