@@ -330,7 +330,10 @@ function openSync(affixes?: string | AffixOptions): OpenFile {
 
 function createWriteStream(affixes?: string | AffixOptions): fs.WriteStream {
   const path = generateName(affixes, "s-");
-  const stream = fs.createWriteStream(path, { flags: RDWR_EXCL, mode: 0o600 });
+  const stream = fs.createWriteStream(path, {
+    flags: `${RDWR_EXCL}`,
+    mode: 0o600,
+  });
   deleteFileOnExit(path);
   return stream;
 }

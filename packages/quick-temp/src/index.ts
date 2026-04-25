@@ -36,8 +36,9 @@ function remove(obj: Obj, prop: string): void {
 }
 
 function makeTmpDir(obj: Obj, prop: string, className?: string): string {
-  if (className == null) className = obj.constructor && obj.constructor.name;
+  if (className == null) className = obj.constructor?.name;
   const tmpDirName = prettyTmpDirName(className, prop);
+  // @ts-expect-error
   return createDirSync(path.join(findBaseDir(), tmpDirName));
 }
 
@@ -52,6 +53,7 @@ function findBaseDir() {
       return tmp;
     }
   } catch (err) {
+    // @ts-expect-error
     if (err.code !== "ENOENT") throw err;
     // We could try other directories, but for now we just create ./tmp if
     // it doesn't exist

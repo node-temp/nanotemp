@@ -48,6 +48,7 @@ export function generateUniqueName(template: string): string {
   const result = [];
 
   for (let i = 0, len = matches[1].length; i < len; i += 1) {
+    // @ts-expect-error
     result.push(table[Math.floor(Math.random() * tableLength)]);
   }
 
